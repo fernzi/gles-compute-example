@@ -16,6 +16,7 @@ auto get_egl_devices()
   if (not eglQueryDevicesEXT(devices.size(), devices.data(), &devices_n)) {
     devices.clear();
   }
+
   return devices;
 }
 
@@ -29,6 +30,19 @@ auto get_egl_display(std::span<EGLDeviceEXT const> devices)
   }
 
   return EGL_NO_DISPLAY;
+}
+
+auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
+{
+  int configs_n = 0;
+  eglChooseConfig(display, attribs.data(), nullptr, 0, &configs_n);
+
+  std::vector<EGLConfig> configs(configs_n);
+  if (not eglChooseConfig(display, attribs.data(), configs.data(), configs.size(), &configs_n)) {
+    configs.clear();
+  }
+
+  return configs;
 }
 
 template<typename ...T>
@@ -53,14 +67,16 @@ int main()
   log("EGL Vendor  : {}", eglQueryString(display, EGL_VENDOR));
   log("EGL Version : {}", eglQueryString(display, EGL_VERSION));
 
-  EGLConfig config;
-  int config_n;
   std::array const config_a = {
     EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
     EGL_NONE
   };
-  eglChooseConfig(display, config_a.data(), &config, 1, &config_n);
+  auto configs = get_egl_configs(display, config_a);
+  if (configs.empty()) {
+    log("ERROR : No matching EGL configuration found");
+    return 1;
+  }
 
   eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -69,7 +85,7 @@ int main()
     EGL_CONTEXT_MINOR_VERSION, 1,
     EGL_NONE,
   };
-  auto context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_a.data());
+  auto context = eglCreateContext(display, configs[0], EGL_NO_CONTEXT, context_a.data());
   eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
 
   log("OpenGL Version : {} {}", epoxy_gl_version() / 10.f, epoxy_is_desktop_gl() ? "" : "ES");

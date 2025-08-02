@@ -106,5 +106,8 @@ int main()
 
   log("OpenGL Version : {} {}", epoxy_gl_version() / 10.f, epoxy_is_desktop_gl() ? "" : "ES");
 
+  eglDestroyContext(display, context);
+  eglTerminate(display);
+
   return 0;
 }

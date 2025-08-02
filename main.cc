@@ -19,6 +19,18 @@ auto get_egl_devices()
   return devices;
 }
 
+auto get_egl_display(std::span<EGLDeviceEXT const> devices)
+{
+  for (auto& device : devices) {
+    auto display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
+    if (eglInitialize(display, nullptr, nullptr)) {
+      return display;
+    }
+  }
+
+  return EGL_NO_DISPLAY;
+}
+
 template<typename ...T>
 void log(std::format_string<T...> fmt, T&&... args)
 {
@@ -33,19 +45,13 @@ int main()
     return 1;
   }
 
-  EGLDisplay display = EGL_NO_DISPLAY;
-  for (auto const& device : devices) {
-    display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
-    if (display != EGL_NO_DISPLAY) {
-      std::pair<int, int> version;
-      if (eglInitialize(display, &version.first, &version.second)) {
-        auto vendor = eglQueryString(display, EGL_VENDOR);
-        log("EGL Vendor  : {}", vendor);
-        log("EGL Version : {}.{}", version.first, version.second);
-        break;
-      }
-    }
+  auto display = get_egl_display(devices);
+  if (display == EGL_NO_DISPLAY) {
+    log("ERROR : No valid EGL display found");
+    return 1;
   }
+  log("EGL Vendor  : {}", eglQueryString(display, EGL_VENDOR));
+  log("EGL Version : {}", eglQueryString(display, EGL_VERSION));
 
   EGLConfig config;
   int config_n;

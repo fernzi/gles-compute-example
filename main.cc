@@ -5,6 +5,19 @@
 #include <array>
 #include <epoxy/egl.h>
 #include <iostream>
+#include <vector>
+
+auto get_egl_devices()
+{
+  int devices_n = 0;
+  eglQueryDevicesEXT(0, nullptr, &devices_n);
+
+  std::vector<EGLDeviceEXT> devices(devices_n);
+  if (not eglQueryDevicesEXT(devices.size(), devices.data(), &devices_n)) {
+    devices.clear();
+  }
+  return devices;
+}
 
 template<typename ...T>
 void log(std::format_string<T...> fmt, T&&... args)
@@ -14,10 +27,11 @@ void log(std::format_string<T...> fmt, T&&... args)
 
 int main()
 {
-  std::array<EGLDeviceEXT, 16> devices {};
-  int devices_n = 0;
-  eglQueryDevicesEXT(devices.size(), devices.data(), &devices_n);
-  log("Found {} EGL devices", devices_n);
+  auto devices = get_egl_devices();
+  if (devices.empty()) {
+    log("ERROR : No EGL devices found");
+    return 1;
+  }
 
   EGLDisplay display = EGL_NO_DISPLAY;
   for (auto const& device : devices) {

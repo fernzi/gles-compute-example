@@ -13,7 +13,8 @@ auto get_egl_devices()
   eglQueryDevicesEXT(0, nullptr, &devices_n);
 
   std::vector<EGLDeviceEXT> devices(devices_n);
-  if (not eglQueryDevicesEXT(devices.size(), devices.data(), &devices_n)) {
+  if (not eglQueryDevicesEXT(
+        devices.size(), devices.data(), &devices_n)) {
     devices.clear();
   }
 
@@ -23,7 +24,9 @@ auto get_egl_devices()
 auto get_egl_display(std::span<EGLDeviceEXT const> devices)
 {
   for (auto& device : devices) {
-    auto display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
+    auto display = eglGetPlatformDisplayEXT(
+      EGL_PLATFORM_DEVICE_EXT, device, nullptr);
+
     if (eglInitialize(display, nullptr, nullptr)) {
       return display;
     }
@@ -38,23 +41,34 @@ auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
   eglChooseConfig(display, attribs.data(), nullptr, 0, &configs_n);
 
   std::vector<EGLConfig> configs(configs_n);
-  if (not eglChooseConfig(display, attribs.data(), configs.data(), configs.size(), &configs_n)) {
+  if (not eglChooseConfig(
+        display,
+        attribs.data(),
+        configs.data(),
+        configs.size(),
+        &configs_n)) {
     configs.clear();
   }
 
   return configs;
 }
 
-auto new_egl_context(EGLDisplay display, EGLConfig config, int major, int minor)
+auto new_egl_context(
+  EGLDisplay display, EGLConfig config, int major, int minor)
 {
   std::array const context_a = {
-    EGL_CONTEXT_MAJOR_VERSION, major,
-    EGL_CONTEXT_MINOR_VERSION, minor,
+    EGL_CONTEXT_MAJOR_VERSION,
+    major,
+    EGL_CONTEXT_MINOR_VERSION,
+    minor,
     EGL_NONE,
   };
-  auto context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_a.data());
+  auto context =
+    eglCreateContext(display, config, EGL_NO_CONTEXT, context_a.data());
+
   if (context != EGL_NO_CONTEXT) {
-    if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context)) {
+    if (eglMakeCurrent(
+          display, EGL_NO_SURFACE, EGL_NO_SURFACE, context)) {
       return context;
     }
     eglDestroyContext(display, context);
@@ -63,7 +77,7 @@ auto new_egl_context(EGLDisplay display, EGLConfig config, int major, int minor)
   return EGL_NO_CONTEXT;
 }
 
-template<typename ...T>
+template<typename... T>
 void log(std::format_string<T...> fmt, T&&... args)
 {
   std::println(std::cerr, fmt, std::forward<T>(args)...);
@@ -86,9 +100,11 @@ int main()
   log("EGL Version : {}", eglQueryString(display, EGL_VERSION));
 
   std::array const config_a = {
-    EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
-    EGL_NONE
+    EGL_SURFACE_TYPE,
+    EGL_PBUFFER_BIT,
+    EGL_RENDERABLE_TYPE,
+    EGL_OPENGL_ES3_BIT,
+    EGL_NONE,
   };
   auto configs = get_egl_configs(display, config_a);
   if (configs.empty()) {
@@ -104,7 +120,10 @@ int main()
     return 1;
   }
 
-  log("OpenGL Version : {} {}", epoxy_gl_version() / 10.f, epoxy_is_desktop_gl() ? "" : "ES");
+  log(
+    "OpenGL Version : {}{}",
+    epoxy_gl_version() / 10.f,
+    epoxy_is_desktop_gl() ? "" : " ES");
 
   eglDestroyContext(display, context);
   eglTerminate(display);

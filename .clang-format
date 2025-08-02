@@ -1,0 +1,7 @@
+BasedOnStyle: Mozilla
+
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: true
+BreakAfterReturnType: Automatic
+ColumnLimit: 72
+Cpp11BracedListStyle: true

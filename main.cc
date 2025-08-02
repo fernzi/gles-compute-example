@@ -45,6 +45,24 @@ auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
   return configs;
 }
 
+auto new_egl_context(EGLDisplay display, EGLConfig config, int major, int minor)
+{
+  std::array const context_a = {
+    EGL_CONTEXT_MAJOR_VERSION, major,
+    EGL_CONTEXT_MINOR_VERSION, minor,
+    EGL_NONE,
+  };
+  auto context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_a.data());
+  if (context != EGL_NO_CONTEXT) {
+    if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context)) {
+      return context;
+    }
+    eglDestroyContext(display, context);
+  }
+
+  return EGL_NO_CONTEXT;
+}
+
 template<typename ...T>
 void log(std::format_string<T...> fmt, T&&... args)
 {
@@ -80,13 +98,11 @@ int main()
 
   eglBindAPI(EGL_OPENGL_ES_API);
 
-  std::array const context_a = {
-    EGL_CONTEXT_MAJOR_VERSION, 3,
-    EGL_CONTEXT_MINOR_VERSION, 1,
-    EGL_NONE,
-  };
-  auto context = eglCreateContext(display, configs[0], EGL_NO_CONTEXT, context_a.data());
-  eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
+  auto context = new_egl_context(display, configs[0], 3, 1);
+  if (context == EGL_NO_CONTEXT) {
+    log("ERROR : Could not create an OpenGL context");
+    return 1;
+  }
 
   log("OpenGL Version : {} {}", epoxy_gl_version() / 10.f, epoxy_is_desktop_gl() ? "" : "ES");
 

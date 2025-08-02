@@ -1,0 +1,16 @@
+*
+!*/
+
+!/.clang-format
+!/.clang-tidy
+!/.gitignore
+!/.gitmodules
+!/LICENSE
+!/README*.md
+
+!/*.cc
+!/*.ccm
+!/*.hh
+!/CMakeLists.txt
+!/CMakePresets.json
+!/cmake/*.cmake

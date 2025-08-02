@@ -6,12 +6,18 @@
 #include <epoxy/egl.h>
 #include <iostream>
 
+template<typename ...T>
+void log(std::format_string<T...> fmt, T&&... args)
+{
+  std::println(std::cerr, fmt, std::forward<T>(args)...);
+}
+
 int main()
 {
   std::array<EGLDeviceEXT, 16> devices {};
   int devices_n = 0;
   eglQueryDevicesEXT(devices.size(), devices.data(), &devices_n);
-  std::println(std::cerr, "Found {} EGL devices", devices_n);
+  log("Found {} EGL devices", devices_n);
 
   EGLDisplay display = EGL_NO_DISPLAY;
   for (auto const& device : devices) {
@@ -20,8 +26,8 @@ int main()
       std::pair<int, int> version;
       if (eglInitialize(display, &version.first, &version.second)) {
         auto vendor = eglQueryString(display, EGL_VENDOR);
-        std::println(std::cerr, "EGL Vendor  : {}", vendor);
-        std::println(std::cerr, "EGL Version : {}.{}", version.first, version.second);
+        log("EGL Vendor  : {}", vendor);
+        log("EGL Version : {}.{}", version.first, version.second);
         break;
       }
     }
@@ -46,7 +52,7 @@ int main()
   auto context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_a.data());
   eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
 
-  std::println(std::cerr, "OpenGL Version : {} {}", epoxy_gl_version() / 10.f, epoxy_is_desktop_gl() ? "" : "ES");
+  log("OpenGL Version : {} {}", epoxy_gl_version() / 10.f, epoxy_is_desktop_gl() ? "" : "ES");
 
   return 0;
 }

@@ -2,10 +2,13 @@
  * Copyright © 2025 Fern Zapata <http://fern.zapata.cc>
  * Code under the ISC licence: <http://www.isc.org/licenses/> */
 
+#include "epoxy/egl.h"
+#include <algorithm>
 #include <array>
-#include <epoxy/egl.h>
 #include <iostream>
 #include <vector>
+
+using namespace std::string_view_literals;
 
 auto get_egl_devices()
 {
@@ -32,6 +35,19 @@ auto get_egl_display(std::span<EGLDeviceEXT const> devices)
   }
 
   return EGL_NO_DISPLAY;
+}
+
+auto check_egl_extensions(
+  EGLDisplay display, std::span<std::string_view> queries)
+{
+  auto extensions = eglQueryString(display, EGL_EXTENSIONS) ?: ""sv;
+  if (extensions.empty()) {
+    return false;
+  }
+
+  return std::ranges::all_of(queries, [extensions](auto query) {
+    return extensions.find(query) != std::string_view::npos;
+  });
 }
 
 auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
@@ -97,6 +113,15 @@ auto main() -> int
   }
   log("EGL Vendor     : {}", eglQueryString(display, EGL_VENDOR));
   log("EGL Version    : {}", eglQueryString(display, EGL_VERSION));
+
+  std::array req_extensions = {
+    "EGL_KHR_create_context"sv,
+    "EGL_KHR_surfaceless_context"sv,
+  };
+  if (not check_egl_extensions(display, req_extensions)) {
+    log("ERROR : The EGL display does not support headless rendering");
+    return 1;
+  }
 
   std::array const config_a = {
     EGL_SURFACE_TYPE,

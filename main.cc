@@ -92,6 +92,22 @@ auto new_egl_context(
   return EGL_NO_CONTEXT;
 }
 
+auto get_program_status(unsigned program)
+{
+  int link_status = 0;
+  glGetProgramiv(program, GL_LINK_STATUS, &link_status);
+  return link_status == GL_TRUE;
+}
+
+auto get_program_log(unsigned program)
+{
+  int log_n = 0;
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_n);
+  std::string log(log_n, '\0');
+  glGetProgramInfoLog(program, log_n, nullptr, log.data());
+  return log;
+}
+
 template<typename... T>
 void log(std::format_string<T...> fmt, T&&... args)
 {
@@ -149,6 +165,24 @@ auto main() -> int
     epoxy_gl_version() / 10.F,
     epoxy_is_desktop_gl() ? "" : " ES");
 
+  auto const* shader = R"(
+#version 310 es
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+void main() {}
+)";
+
+  auto program = glCreateShaderProgramv(GL_COMPUTE_SHADER, 1, &shader);
+  if (not program) {
+    log("ERROR : Could not create GPU program");
+    return 1;
+  }
+  if (not get_program_status(program)) {
+    log("SHADER ERROR : {}", get_program_log(program));
+    return 1;
+  }
+  glUseProgram(program);
+
+  glDeleteProgram(program);
   eglDestroyContext(display, context);
   eglTerminate(display);
 

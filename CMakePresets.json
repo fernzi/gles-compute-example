@@ -18,7 +18,7 @@
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_CLANG_TIDY": "clang-tidy",
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy",
         "CMAKE_COLOR_DIAGNOSTICS": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }

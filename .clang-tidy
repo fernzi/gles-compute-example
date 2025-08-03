@@ -1,0 +1,9 @@
+Checks:
+  - bugprone-*
+  - clang-analyzer-*
+  - clang-diagnostic-*
+  - cppcoreguidelines-*
+  - modernize-*
+  - performance-*
+  - portability-*
+  - readability-*

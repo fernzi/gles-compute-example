@@ -13,8 +13,7 @@ auto get_egl_devices()
   eglQueryDevicesEXT(0, nullptr, &devices_n);
 
   std::vector<EGLDeviceEXT> devices(devices_n);
-  if (not eglQueryDevicesEXT(
-        devices.size(), devices.data(), &devices_n)) {
+  if (not eglQueryDevicesEXT(devices_n, devices.data(), &devices_n)) {
     devices.clear();
   }
 
@@ -23,7 +22,7 @@ auto get_egl_devices()
 
 auto get_egl_display(std::span<EGLDeviceEXT const> devices)
 {
-  for (auto& device : devices) {
+  for (auto const& device : devices) {
     auto display = eglGetPlatformDisplayEXT(
       EGL_PLATFORM_DEVICE_EXT, device, nullptr);
 
@@ -45,7 +44,7 @@ auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
         display,
         attribs.data(),
         configs.data(),
-        configs.size(),
+        configs_n,
         &configs_n)) {
     configs.clear();
   }
@@ -83,7 +82,7 @@ void log(std::format_string<T...> fmt, T&&... args)
   std::println(std::cerr, fmt, std::forward<T>(args)...);
 }
 
-int main()
+auto main() -> int
 {
   auto devices = get_egl_devices();
   if (devices.empty()) {
@@ -96,8 +95,8 @@ int main()
     log("ERROR : No valid EGL display found");
     return 1;
   }
-  log("EGL Vendor  : {}", eglQueryString(display, EGL_VENDOR));
-  log("EGL Version : {}", eglQueryString(display, EGL_VERSION));
+  log("EGL Vendor     : {}", eglQueryString(display, EGL_VENDOR));
+  log("EGL Version    : {}", eglQueryString(display, EGL_VERSION));
 
   std::array const config_a = {
     EGL_SURFACE_TYPE,
@@ -122,7 +121,7 @@ int main()
 
   log(
     "OpenGL Version : {}{}",
-    epoxy_gl_version() / 10.f,
+    epoxy_gl_version() / 10.F,
     epoxy_is_desktop_gl() ? "" : " ES");
 
   eglDestroyContext(display, context);

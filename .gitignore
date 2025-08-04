@@ -8,11 +8,12 @@
 !/LICENSE
 !/README*.md
 
-!/*.cc
-!/*.glsl
-!/*.hh
-!/*.in
-!/*.s
 !/CMakeLists.txt
 !/CMakePresets.json
-!/cmake/*.cmake
+!/cmake/**/*.cmake
+!/src/**/*.cc
+!/src/**/*.glsl
+!/src/**/*.hh
+!/src/**/*.in
+!/src/**/*.s
+!/src/**/CMakeLists.txt

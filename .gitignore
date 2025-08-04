@@ -9,8 +9,10 @@
 !/README*.md
 
 !/*.cc
-!/*.ccm
+!/*.glsl
 !/*.hh
+!/*.in
+!/*.s
 !/CMakeLists.txt
 !/CMakePresets.json
 !/cmake/*.cmake

@@ -1,0 +1,15 @@
+  .section .rodata
+
+  .global shader_source
+  .type   shader_source, @object
+  .balign 4
+shader_source:
+  .incbin "@SHADER_PATH@"
+shader_source_end:
+  .byte   0
+
+  .global shader_source_size
+  .type   shader_source_size, @object
+  .balign 4
+shader_source_size:
+  .int    shader_source_end - shader_source

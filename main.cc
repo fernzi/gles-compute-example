@@ -10,6 +10,8 @@
 
 using namespace std::string_view_literals;
 
+extern char const shader_source[];
+
 auto get_egl_devices()
 {
   int devices_n = 0;
@@ -165,11 +167,7 @@ auto main() -> int
     epoxy_gl_version() / 10.F,
     epoxy_is_desktop_gl() ? "" : " ES");
 
-  auto const* shader = R"(
-#version 310 es
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-void main() {}
-)";
+  auto const* shader = &shader_source[0];
 
   auto program = glCreateShaderProgramv(GL_COMPUTE_SHADER, 1, &shader);
   if (not program) {

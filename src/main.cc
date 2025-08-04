@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <print>
 #include <vector>
 
 using namespace std::string_view_literals;
@@ -110,6 +111,59 @@ auto get_program_log(unsigned program)
   return log;
 }
 
+template<typename T>
+auto new_gl_buffer(GLenum target, GLenum usage, unsigned index, T data)
+  -> unsigned
+{
+  unsigned buffer = 0;
+  glGenBuffers(1, &buffer);
+  glBindBuffer(target, buffer);
+  if (glGetError() != GL_NO_ERROR) {
+    glDeleteBuffers(1, &buffer);
+    return 0;
+  }
+
+  auto data_size = data.size() * sizeof(decltype(data.back()));
+  glBufferData(target, data_size, data.data(), usage);
+  if (glGetError() != GL_NO_ERROR) {
+    glDeleteBuffers(1, &buffer);
+    return 0;
+  }
+
+  glBindBufferBase(target, index, buffer);
+  if (glGetError() != GL_NO_ERROR) {
+    glDeleteBuffers(1, &buffer);
+    return 0;
+  }
+
+  glBindBuffer(target, 0);
+
+  return buffer;
+}
+
+template<typename T>
+auto map_gl_buffer(
+  GLenum target, unsigned buffer, GLbitfield access = GL_MAP_READ_BIT)
+  -> std::span<T>
+{
+  int size = 0;
+  glBindBuffer(target, buffer);
+  glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);
+  auto* data = glMapBufferRange(target, 0, size, access);
+  glBindBuffer(target, 0);
+  return {
+    static_cast<T*>(data),
+    static_cast<std::size_t>(size) / sizeof(T),
+  };
+}
+
+void set_gl_uniform(
+  unsigned program, std::string const& name, unsigned value)
+{
+  auto location = glGetUniformLocation(program, name.c_str());
+  glUniform1ui(location, value);
+}
+
 template<typename... T>
 void log(std::format_string<T...> fmt, T&&... args)
 {
@@ -179,6 +233,40 @@ auto main() -> int
     return 1;
   }
   glUseProgram(program);
+
+  std::array<unsigned, 20> values = {};
+  std::ranges::iota(values, 0);
+
+  unsigned buffer =
+    new_gl_buffer(GL_SHADER_STORAGE_BUFFER, GL_STATIC_READ, 0, values);
+  if (not buffer) {
+    log("ERROR : Could not create shader buffer");
+    return 1;
+  }
+
+  set_gl_uniform(program, "elements", values.size());
+
+  glDispatchCompute(values.size(), 1, 1);
+  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+  auto output =
+    map_gl_buffer<unsigned>(GL_SHADER_STORAGE_BUFFER, buffer);
+  if (output.empty()) {
+    log("ERROR : Could not retrieve output data");
+    return 1;
+  }
+
+  std::println("Input  :");
+  for (auto const& element : values) {
+    std::print(" {}", element);
+  }
+  std::println();
+
+  std::println("Output :");
+  for (auto const& element : output) {
+    std::print(" {}", element);
+  }
+  std::println();
 
   glDeleteProgram(program);
   eglDestroyContext(display, context);

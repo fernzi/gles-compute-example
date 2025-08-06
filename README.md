@@ -1,5 +1,7 @@
 # OpenGL ES Headless Compute Example
 
+[![Build](https://github.com/fernzi/gles-compute-example/actions/workflows/build.yml/badge.svg)][ghbld]
+
 A simple, but not trivial (i.e. it actually does computation) example
 of compute shader usage with EGL, OpenGL ES 3.1, and C++23 features.
 
@@ -11,6 +13,7 @@ so this project exists as a way to remind myself how to do it,
 and because I couldn't find an example doing exactly what I wanted
 (GLES, with C++, headless, running more than a dummy shader).
 
+[ghbld]: https://github.com/fernzi/gles-compute-example/actions/workflows/build.yml
 [sig15]: https://youtu.be/quNsdYfWXfM&t=2327
 
 ## Building
@@ -24,7 +27,7 @@ You can install these with the commands
 
 ```sh
 # For Debian, Ubuntu, Mint, etc.
-apt install build-essential cmake extra-cmake-modules epoxy ninja
+apt install build-essential cmake extra-cmake-modules libepoxy-dev ninja
 
 # For Arch, Endeavour, Manjaro, etc.
 pacman -S base-devel cmake extra-cmake-modules libepoxy ninja

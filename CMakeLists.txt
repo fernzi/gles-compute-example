@@ -14,4 +14,8 @@ list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 find_package(epoxy 1.5 REQUIRED)
 
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  include(CTest)
+endif()
+
 add_subdirectory(src)

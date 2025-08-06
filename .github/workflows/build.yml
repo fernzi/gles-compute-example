@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run:  |
+          sudo apt-get update
+          sudo apt-get install extra-cmake-modules libepoxy-dev libgles-dev
+
+      - name: Configure
+        run:  >
+          cmake -B build -G Ninja
+          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        run:  cmake --build build --config ${{env.BUILD_TYPE}}
+
+      - name: Test
+        run:  >
+          ctest --test-dir build
+          --build-config ${{env.BUILD_TYPE}}
+          --output-on-failure

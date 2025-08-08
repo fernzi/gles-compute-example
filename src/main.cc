@@ -15,10 +15,10 @@ extern char const shader_source[];
 
 auto get_egl_devices()
 {
-  int devices_n = 0;
+  auto devices_n = 0;
   eglQueryDevicesEXT(0, nullptr, &devices_n);
 
-  std::vector<EGLDeviceEXT> devices(devices_n);
+  auto devices = std::vector<EGLDeviceEXT>(devices_n);
   if (not eglQueryDevicesEXT(devices_n, devices.data(), &devices_n)) {
     devices.clear();
   }
@@ -55,10 +55,10 @@ auto check_egl_extensions(
 
 auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
 {
-  int configs_n = 0;
+  auto configs_n = 0;
   eglChooseConfig(display, attribs.data(), nullptr, 0, &configs_n);
 
-  std::vector<EGLConfig> configs(configs_n);
+  auto configs = std::vector<EGLConfig>(configs_n);
   if (not eglChooseConfig(
         display,
         attribs.data(),
@@ -74,7 +74,7 @@ auto get_egl_configs(EGLDisplay display, std::span<int const> attribs)
 auto new_egl_context(
   EGLDisplay display, EGLConfig config, int major, int minor)
 {
-  std::array const context_a = {
+  auto const context_a = std::array{
     EGL_CONTEXT_MAJOR_VERSION,
     major,
     EGL_CONTEXT_MINOR_VERSION,
@@ -97,43 +97,42 @@ auto new_egl_context(
 
 auto get_program_status(unsigned program)
 {
-  int link_status = 0;
+  auto link_status = 0;
   glGetProgramiv(program, GL_LINK_STATUS, &link_status);
   return link_status == GL_TRUE;
 }
 
 auto get_program_log(unsigned program)
 {
-  int log_n = 0;
+  auto log_n = 0;
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_n);
-  std::string log(log_n, '\0');
+  auto log = std::string(log_n, '\0');
   glGetProgramInfoLog(program, log_n, nullptr, log.data());
   return log;
 }
 
 template<typename T>
 auto new_gl_buffer(GLenum target, GLenum usage, unsigned index, T data)
-  -> unsigned
 {
-  unsigned buffer = 0;
+  auto buffer = 0U;
   glGenBuffers(1, &buffer);
   glBindBuffer(target, buffer);
   if (glGetError() != GL_NO_ERROR) {
     glDeleteBuffers(1, &buffer);
-    return 0;
+    return 0U;
   }
 
   auto data_size = data.size() * sizeof(decltype(data.back()));
   glBufferData(target, data_size, data.data(), usage);
   if (glGetError() != GL_NO_ERROR) {
     glDeleteBuffers(1, &buffer);
-    return 0;
+    return 0U;
   }
 
   glBindBufferBase(target, index, buffer);
   if (glGetError() != GL_NO_ERROR) {
     glDeleteBuffers(1, &buffer);
-    return 0;
+    return 0U;
   }
 
   glBindBuffer(target, 0);
@@ -144,14 +143,13 @@ auto new_gl_buffer(GLenum target, GLenum usage, unsigned index, T data)
 template<typename T>
 auto map_gl_buffer(
   GLenum target, unsigned buffer, GLbitfield access = GL_MAP_READ_BIT)
-  -> std::span<T>
 {
-  int size = 0;
+  auto size = 0;
   glBindBuffer(target, buffer);
   glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);
-  auto* data = glMapBufferRange(target, 0, size, access);
+  auto data = glMapBufferRange(target, 0, size, access);
   glBindBuffer(target, 0);
-  return {
+  return std::span<T>{
     static_cast<T*>(data),
     static_cast<std::size_t>(size) / sizeof(T),
   };
@@ -186,7 +184,7 @@ auto main() -> int
   log("EGL Vendor     : {}", eglQueryString(display, EGL_VENDOR));
   log("EGL Version    : {}", eglQueryString(display, EGL_VERSION));
 
-  std::array req_extensions = {
+  auto req_extensions = std::array{
     "EGL_KHR_create_context"sv,
     "EGL_KHR_surfaceless_context"sv,
   };
@@ -195,7 +193,7 @@ auto main() -> int
     return 1;
   }
 
-  std::array const config_a = {
+  auto const config_a = std::array{
     EGL_SURFACE_TYPE,
     EGL_PBUFFER_BIT,
     EGL_RENDERABLE_TYPE,
@@ -221,7 +219,7 @@ auto main() -> int
     epoxy_gl_version() / 10.F,
     epoxy_is_desktop_gl() ? "" : " ES");
 
-  auto const* shader = &shader_source[0];
+  auto const shader = &shader_source[0];
 
   auto program = glCreateShaderProgramv(GL_COMPUTE_SHADER, 1, &shader);
   if (not program) {
@@ -234,10 +232,10 @@ auto main() -> int
   }
   glUseProgram(program);
 
-  std::array<unsigned, 20> values = {};
+  auto values = std::array<unsigned, 20>();
   std::ranges::iota(values, 0);
 
-  unsigned buffer =
+  auto buffer =
     new_gl_buffer(GL_SHADER_STORAGE_BUFFER, GL_STATIC_READ, 0, values);
   if (not buffer) {
     log("ERROR : Could not create shader buffer");
